@@ -1,0 +1,10 @@
+/.project
+/.pydevproject
+.ropeproject
+/.settings
+*.pyc
+/build
+/dist
+/Hanyuu_sama.egg-info
+/vintest.py
+temp.py
