@@ -13,14 +13,13 @@ from .server import create_entry, register_backend
 RANDOM_SELECT_ADVANCED = """
 SELECT temp.id, temp.lastplayed, temp.lastrequested, temp.meta FROM (
     (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
-        JOIN esong ON tracks.hash = esong.hash WHERE usable=1 AND tracks.id
-        NOT IN (55,55) ORDER BY
+        JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
         (UNIX_TIMESTAMP(lastplayed) + 1)*(UNIX_TIMESTAMP(lastrequested) + 1)
         ASC LIMIT 100)
     UNION ALL
     (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
-        JOIN esong ON tracks.hash = esong.hash WHERE usable=1 AND tracks.id
-        NOT IN (55,55) ORDER BY LEAST(lastplayed, lastrequested)
+        JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
+        LEAST(lastplayed, lastrequested)
         ASC LIMIT 100)
 ) AS temp GROUP BY temp.id HAVING count(*) >= 2;
 """

@@ -5,7 +5,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-      name="Hanyuu-sama",
+      name="hanyuu.queue",
       version="1.4.0a",
       author='Wessie',
       author_email='r-a-dio@wessie.info',
@@ -13,8 +13,10 @@ setup(
       license='GPL',
       install_requires=[
                   "jsonrpclib",
-                  "mysql-python",
       ],
+      extras_require={
+          "mysql": ["mysql-python"],
+      },
       entry_points={
           "console_scripts": [
               "hanyuu.queue = hanyuu.queue.runner:main",
