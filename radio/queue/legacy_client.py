@@ -14,35 +14,44 @@ def from_song(song):
     )
 
 def to_song(entry):
-    return Song(id=entry.songid)
+    return QSong(id=entry.songid, type=1 if entry.request else 0, time=entry.estimate)
 
 
 class Queue(Queue):
     def peek(self, index=0):
-        return to_song(self.server.peek(index=index))
+        return to_song(super(Queue, self).peek(index=index))
 
     def pop(self):
-        return to_song(self.server.pop())
+        return to_song(super(Queue, self).pop())
 
     def append(self, song):
-        return self.server.append(from_song(song))
+        return super(Queue, self).append(from_song(song))
 
     def append_request(self, song):
-        return self.server.append_request(from_song(song))
+        return super(Queue, self).append_request(from_song(song))
 
     def __getitem__(self, point):
         if isinstance(point, slice):
-            return [to_song(s) for s in self.server.slice(start=point.start, end=point.stop)]
+            return [to_song(s) for s in super(Queue, self).__getitem__(point)]
         elif isinstance(point, int):
-            return to_song(self.server.peek(point))
+            return to_song(super(Queue, self).peek(point))
 
     def __len__(self):
         return self.server.length()
 
     def __iter__(self):
-        return self[0:5]
+        return iter(self[0:5])
+
+    def iter(self, limit=None):
+        if not limit:
+            limit = len(self)
+        return self[0:limit]
+
+    def clear_pops(self):
+	pass # yep it does nothing
 
     def get(self, song):
         for s in self[0:len(self)]:
-            if s.id == song.id:
-                return QSong(s.id)
+            if s.songid == song.id:
+                return QSong(id=s.id, type=1 if s.request else 0, time=s.estimate)
+        raise QueueError()
