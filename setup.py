@@ -5,11 +5,11 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-      name="hanyuu.queue",
+      name="radio.queue",
       version="1.4.0a",
       author='Wessie',
       author_email='r-a-dio@wessie.info',
-      description=("Queue RPC implementation for hanyuu."),
+      description=("Queue RPC implementation."),
       license='GPL',
       install_requires=[
                   "jsonrpclib",
@@ -19,9 +19,9 @@ setup(
       },
       entry_points={
           "console_scripts": [
-              "hanyuu.queue = hanyuu.queue.runner:main",
+              "radio.queue = radio.queue.runner:main",
           ],
       },
       keywords="streaming icecast fastcgi irc",
-      packages=['hanyuu', 'hanyuu.queue'],
+      packages=['radio', 'radio.queue'],
       )
