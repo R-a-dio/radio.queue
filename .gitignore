@@ -5,6 +5,7 @@
 *.pyc
 /build
 /dist
-/Hanyuu_sama.egg-info
+*.egg-info
 /vintest.py
 temp.py
+*.conf
