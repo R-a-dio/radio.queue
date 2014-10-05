@@ -79,11 +79,12 @@ def populate(queue):
         if randoms >= 5:
             return
 
-        ids = [entry.songid for entry in queue]
-        ids.append(0) # ensure that there is an entry in the list
+        # ids = [entry.songid for entry in queue]
+        # ids.append(0) # ensure that there is an entry in the list
 
         with queue.cursor() as cur:
-            cur.execute(RANDOM_SELECT % ','.join(["%s"] * len(ids)), ids)
+            cur.execute(RANDOM_SELECT_ADVANCED)
+            # cur.execute(RANDOM_SELECT % ','.join(["%s"] * len(ids)), ids)
 
             all = list(cur.fetchall())
             for i in range(5 - randoms): # add up to 5 entries
