@@ -2,14 +2,19 @@ from __future__ import absolute_import
 import functools
 import threading
 import time
+import logging
+import sys
 from collections import deque, namedtuple
 
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer as JSONServer
 import jsonrpclib
 
 
-jsonrpclib.config.use_jsonclass = False
+# setup logging, we use stdout
+logger = logging.getLogger("radio.queue")
+logger.addHandler(logging.StreamHandler(sys.stderr))
 
+jsonrpclib.config.use_jsonclass = False
 
 api_functions = []
 Backend = namedtuple("Backend", ("save", "load", "populate", "expand"))
@@ -102,6 +107,7 @@ def pop(queue):
     with queue.lock:
         entry = queue.popleft()
 
+        logger.debug("pop: %s", entry)
         queue.next_song_estimate = time.time() + entry.length
 
         run(populate, queue)
@@ -133,6 +139,8 @@ def append(queue, song):
     with queue.lock:
         queue.append(entry)
 
+    logger.debug("append: %s", song)
+
 
 @public
 @commit
@@ -146,6 +154,8 @@ def append_request(queue, song):
 
     with queue.lock:
         queue.append(entry)
+
+    logger.debug("append_request: %s", song)
 
 
 @public
@@ -173,6 +183,7 @@ def save(queue, backend=None):
     """
     backend = backend or queue.backend
 
+    logger.info("saving queue")
     return find_backend(backend).save(queue)
 
 
@@ -184,6 +195,7 @@ def load(queue, backend=None):
 
     queue.next_song_estimate = time.time()
 
+    logger.info("loading queue")
     return find_backend(backend).load(queue)
 
 
@@ -193,10 +205,14 @@ def populate(queue, backend=None):
     """
     backend = backend or queue.backend
 
+    logger.info("populating queue")
     return find_backend(backend).populate(queue)
 
 
 def run_server(host, port, backend="mysql", config=None):
+    logger.setLevel(logging.DEBUG)
+
+    logger.info("initializing in-memory queue")
     # Create our local queue
     queue = deque()
     queue.backend = backend
@@ -211,16 +227,21 @@ def run_server(host, port, backend="mysql", config=None):
     # Create copies of the API methods with our local queue applied
     functions = wrap_functions(queue)
 
+    logger.info("initializing jsonrpc server")
     # Setup the JSON RPC server and its methods
-    server = JSONServer((host, port), encoding="utf8")
+    server = JSONServer((host, port), encoding="utf8", logRequests=False)
 
     for function in functions:
+        logger.debug("-> registering jsonrpc function: %s", function)
         server.register_function(function)
 
+    logger.info("starting jsonrpc server")
     server.serve_forever()
 
     # Save before exiting
     save(queue)
+
+    logger.info("exiting...")
 
 
 def wrap_functions(queue):
