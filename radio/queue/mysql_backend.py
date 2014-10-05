@@ -11,13 +11,13 @@ from .server import create_entry, register_backend
 
 
 RANDOM_SELECT_ADVANCED = """
-SELECT temp.id, temp.lastplayed, temp.lastrequested, temp.meta FROM (
-    (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
+SELECT temp.id, temp.path, temp.len, temp.meta FROM (
+    (SELECT tracks.id, tracks.path, esong.len, esong.meta FROM tracks
         JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
         (UNIX_TIMESTAMP(lastplayed) + 1)*(UNIX_TIMESTAMP(lastrequested) + 1)
         ASC LIMIT 100)
     UNION ALL
-    (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
+    (SELECT tracks.id, tracks.path, esong.len, esong.meta FROM tracks
         JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
         LEAST(lastplayed, lastrequested)
         ASC LIMIT 100)
