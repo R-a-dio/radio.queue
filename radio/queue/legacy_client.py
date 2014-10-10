@@ -52,6 +52,6 @@ class Queue(Queue):
 
     def get(self, song):
         for s in self[0:len(self)]:
-            if s.songid == song.id:
+            if s.id == song.id:
                 return QSong(id=s.id, type=1 if s.request else 0, time=s.estimate)
         raise QueueError()
