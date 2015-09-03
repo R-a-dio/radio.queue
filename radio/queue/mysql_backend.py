@@ -116,7 +116,7 @@ def save(queue):
                 cur.execute(INSERT_QUEUE, (
                     entry.songid, int(time_acc),
                     '1' if entry.request else '0', entry.metadata,
-                    entry.length, i))
+                    entry.length, i+1))
 
 def load(queue):
     """
