@@ -11,13 +11,13 @@ from .server import create_entry, register_backend
 
 
 RANDOM_SELECT_ADVANCED = """
-SELECT temp.id, temp.lastplayed, temp.lastrequested, temp.meta FROM (
-    (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
+SELECT temp.id, temp.path, temp.len, temp.meta FROM (
+    (SELECT tracks.id, tracks.path, esong.len, esong.meta FROM tracks
         JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
         (UNIX_TIMESTAMP(lastplayed) + 1)*(UNIX_TIMESTAMP(lastrequested) + 1)
         ASC LIMIT 100)
     UNION ALL
-    (SELECT tracks.id, lastplayed, lastrequested, esong.meta FROM tracks
+    (SELECT tracks.id, tracks.path, esong.len, esong.meta FROM tracks
         JOIN esong ON tracks.hash = esong.hash WHERE usable=1 ORDER BY
         LEAST(lastplayed, lastrequested)
         ASC LIMIT 100)
@@ -79,11 +79,12 @@ def populate(queue):
         if randoms >= 5:
             return
 
-        ids = [entry.songid for entry in queue]
-        ids.append(0) # ensure that there is an entry in the list
+        # ids = [entry.songid for entry in queue]
+        # ids.append(0) # ensure that there is an entry in the list
 
         with queue.cursor() as cur:
-            cur.execute(RANDOM_SELECT % ','.join(["%s"] * len(ids)), ids)
+            cur.execute(RANDOM_SELECT_ADVANCED)
+            # cur.execute(RANDOM_SELECT % ','.join(["%s"] * len(ids)), ids)
 
             all = list(cur.fetchall())
             for i in range(5 - randoms): # add up to 5 entries
@@ -115,7 +116,7 @@ def save(queue):
                 cur.execute(INSERT_QUEUE, (
                     entry.songid, int(time_acc),
                     '1' if entry.request else '0', entry.metadata,
-                    entry.length, i))
+                    entry.length, i+1))
 
 def load(queue):
     """
