@@ -60,7 +60,6 @@ tracks JOIN esong ON tracks.hash = esong.hash
 WHERE tracks.id=%s;
 """
 
-
 def cursor_factory(**factory_options):
     def cursor(**options):
         options.update(factory_options)
@@ -75,8 +74,10 @@ def populate(queue):
 
     with queue.lock:
         randoms = sum(not bool(entry.request) for entry in queue)
+        reqs = sum(bool(entry.request) for entry in queue)
+        threshold = (10 - min(reqs, 10)) / 2
 
-        if randoms >= 5:
+        if randoms >= threshold:
             return
 
         # ids = [entry.songid for entry in queue]
@@ -87,7 +88,7 @@ def populate(queue):
             # cur.execute(RANDOM_SELECT % ','.join(["%s"] * len(ids)), ids)
 
             all = list(cur.fetchall())
-            for i in range(5 - randoms): # add up to 5 entries
+            for i in range(threshold - randoms): # add up to threshold entries
                 trackid, path, length, meta = all.pop(random.randint(0, len(all)-1))
                 cur.execute(LR_UPDATE, (trackid,))
 
