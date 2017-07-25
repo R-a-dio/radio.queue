@@ -17,11 +17,11 @@ logger.addHandler(logging.StreamHandler(sys.stderr))
 jsonrpclib.config.use_jsonclass = False
 
 api_functions = []
-Backend = namedtuple("Backend", ("save", "load", "populate", "expand"))
+Backend = namedtuple("Backend", ("save", "load", "populate", "expand", "length"))
 
 # We need a backend we can return at all times. This one always just does nothing.
 NOP = lambda *args, **kwargs: None
-NOP_BACKEND = Backend(save=NOP, load=NOP, populate=NOP, expand=NOP)
+NOP_BACKEND = Backend(save=NOP, load=NOP, populate=NOP, expand=NOP, length=NOP)
 
 # A dictionary of backends, name => Backend
 backends = {}
@@ -68,6 +68,18 @@ def commit(function):
     @functools.wraps(function)
     def save_after_execution(queue, *args, **kwargs):
         try:
+            with queue.lock:
+                # Check that the lengths of the internal queue
+                # and the backend store queue match up.
+                backend_len = find_backend(queue.backend).length(queue)
+                if len(queue) != backend_len:
+                    logger.debug("length mismatch(%d, %d), reloading", len(queue), backend_len)
+
+                    # If they don't, purge the internal queue and reload.
+                    queue.clear()
+                    load(queue)
+                    populate(queue)
+
             return function(queue, *args, **kwargs)
         finally:
             run(save, queue)
@@ -259,10 +271,11 @@ def run(function, *args, **kwargs):
     thread.start()
 
 
-def register_backend(name, save, load, populate, expand=None):
+def register_backend(name, save, load, populate, expand=None, length=None):
     expand = expand or (lambda queue, item: item)
+    length = length or (lambda queue: len(queue))
 
-    backends[name] = Backend(save=save, load=load, populate=populate, expand=expand)
+    backends[name] = Backend(save=save, load=load, populate=populate, expand=expand, length=length)
 
 
 def find_backend(name):

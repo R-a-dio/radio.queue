@@ -171,7 +171,12 @@ def expand(queue, entry):
     return entry
 
 
-register_backend("mysql", save, load, populate, expand)
+def length(queue):
+    with queue.cursor() as cur:
+        cur.execute(LOAD_QUEUE)
+        return cur.rowcount
+
+register_backend("mysql", save, load, populate, expand, length)
 
 
 class Cursor(object):
