@@ -68,18 +68,22 @@ def commit(function):
     @functools.wraps(function)
     def save_after_execution(queue, *args, **kwargs):
         try:
-            with queue.lock:
-                # Check that the lengths of the internal queue
-                # and the backend store queue match up.
-                backend_len = find_backend(queue.backend).length(queue)
-                if len(queue) != backend_len:
-                    logger.debug("length mismatch(%d, %d), reloading", len(queue), backend_len)
-
-                    # If they don't, purge the internal queue and reload.
-                    queue.clear()
-                    load(queue)
-                    populate(queue)
-
+# This is terribly broken because the assumption is that the memory
+# queue is the master and the backend is just a store. No assumption
+# about the state of the backend can be made, and it does not have to
+# be consistent with the memory queue.
+#            with queue.lock:
+#                # Check that the lengths of the internal queue
+#                # and the backend store queue match up.
+#                backend_len = find_backend(queue.backend).length(queue)
+#                if len(queue) != backend_len:
+#                    logger.debug("length mismatch(%d, %d), reloading", len(queue), backend_len)
+#
+#                    # If they don't, purge the internal queue and reload.
+#                    queue.clear()
+#                    load(queue)
+#                    populate(queue)
+#
             return function(queue, *args, **kwargs)
         finally:
             run(save, queue)
