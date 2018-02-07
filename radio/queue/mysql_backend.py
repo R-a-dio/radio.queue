@@ -106,18 +106,17 @@ def save(queue):
     """
     Saves the queue.
     """
-    now = time.time()
-    time_acc = queue.last_pop
+    time_acc = queue.next_song_estimate
 
     with queue.cursor() as cur:
         cur.execute(DELETE_QUEUE)
         with queue.lock:
             for i, entry in enumerate(queue):
-                time_acc = time_acc + entry.length
                 cur.execute(INSERT_QUEUE, (
                     entry.songid, int(time_acc),
                     '1' if entry.request else '0', entry.metadata,
                     entry.length, i+1))
+                time_acc = time_acc + entry.length
 
 def load(queue):
     """
